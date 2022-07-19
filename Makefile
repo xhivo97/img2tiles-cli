@@ -1,14 +1,15 @@
-ifeq ($(OS), Windows_NT)
-	NAME=img-slice.exe
-	NULL=nul
-else
-	NAME=img-slice
-	NULL=/dev/null
-endif
-
 CC=gcc
 CFLAGS=-O2 -DNDEBUG -Wall -Wextra
 LDFLAGS=-lpng
+BASENAME=img-slice
+
+ifeq ($(OS), Windows_NT)
+	SHELL=cmd.exe
+	NAME=$(BASENAME).exe
+	LDFLAGS+=-municode
+else
+	NAME=$(BASENAME)
+endif
 
 SRCDIR=src
 SRCS=$(wildcard $(SRCDIR)/*.c)
@@ -29,19 +30,33 @@ $(RELEASEBIN): $(RELOBJS)
 $(DEBUGBIN): $(DBGOBJS)
 	$(CC) $(CFLAGS) $(DBGOBJS) $(LDFLAGS) -o $@
 
+
+ifeq ($(OS), Windows_NT)
 release/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir -p release
-	@ mkdir -p release/obj
+	@ mkdir release\obj 2> nul || VER>NUL
 	$(CC) $(CFLAGS) -c $< -o $@
 
 debug/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir -p debug
-	@ mkdir -p debug/obj
+	@ mkdir debug\obj 2> nul || VER>NUL
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(RELOBJS) $(DBGOBJS) $(DEBUGBIN) $(RELEASEBIN)
-	@ mkdir release release/obj 2> $(NULL) || true
-	rmdir release/obj release
-	@ mkdir debug debug/obj 2> $(NULL) || true
-	rmdir debug/obj debug
+	@ mkdir release\obj 2> nul || VER>NUL
+	@ mkdir debug\obj 2> nul || VER>NUL
+	del /f /q release\obj\* release\* && rmdir release\obj release
+	del /f /q debug\obj\* debug\* && rmdir debug\obj debug
+else
+release/obj/%.o: $(SRCDIR)/%.c
+	@ mkdir -p release/obj || true
+	$(CC) $(CFLAGS) -c $< -o $@
+
+debug/obj/%.o: $(SRCDIR)/%.c
+	@ mkdir -p debug/obj || true
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	@ mkdir -p release/obj || true
+	@ mkdir -p debug/obj || true
+	rm -f release/obj/*.o && rmdir release/obj && rm -f release/* && rmdir release
+	rm -f debug/obj/*.o && rmdir debug/obj && rm -f debug/* && rmdir debug
+endif
