@@ -41,5 +41,7 @@ debug/obj/%.o: $(SRCDIR)/%.c
 
 clean:
 	$(RM) $(RELOBJS) $(DBGOBJS) $(DEBUGBIN) $(RELEASEBIN)
-	mkdir release release/obj 2> $(NULL) || true && rmdir release/obj release
-	mkdir debug debug/obj 2> $(NULL) || true && rmdir debug/obj debug
+	@ mkdir release release/obj 2> $(NULL) || true
+	rmdir release/obj release
+	@ mkdir debug debug/obj 2> $(NULL) || true
+	rmdir debug/obj debug
