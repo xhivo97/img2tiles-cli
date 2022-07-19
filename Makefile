@@ -1,4 +1,11 @@
-NAME=img-slice
+ifeq ($(OS), Windows_NT)
+	NAME=img-slice.exe
+	NULL=nul
+else
+	NAME=img-slice
+	NULL=/dev/null
+endif
+
 CC=gcc
 CFLAGS=-O2 -DNDEBUG -Wall -Wextra
 LDFLAGS=-lpng
@@ -34,3 +41,5 @@ debug/obj/%.o: $(SRCDIR)/%.c
 
 clean:
 	$(RM) $(RELOBJS) $(DBGOBJS) $(DEBUGBIN) $(RELEASEBIN)
+	mkdir release release/obj 2> $(NULL) || true && rmdir release/obj release
+	mkdir debug debug/obj 2> $(NULL) || true && rmdir debug/obj debug
