@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 #endif
 
     if (argc != 3) {
-        FPRINTF(stderr, "usage: %s <input_file> <output_folder>\n", getbase(argv[0]));
+        print_error("usage: %s <input_file> <output_folder>\n", getbase(argv[0]));
         return EXIT_FAILURE;
     }
 

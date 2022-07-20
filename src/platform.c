@@ -1,4 +1,8 @@
+#include<stdio.h> 
+#include<stdarg.h> 
+
 #ifdef _WIN32
+#include<stdlib.h>
 #include <direct.h>
 #include <locale.h>
 #include <io.h>
@@ -33,3 +37,32 @@ const char *getbase(const char *path) {
 
     return ++res;
 }
+
+void print_error(char *fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
+
+#ifdef _WIN32
+    wchar_t *w_fmt;
+    int size = snwprintf(NULL, 0, L"%s", fmt);
+    w_fmt = malloc(sizeof(wchar_t)*size+1);
+    snwprintf(w_fmt, size, L"%s", fmt);
+
+    fmt_s_to_S(w_fmt);
+    vfwprintf(stderr, w_fmt, arg);
+#else
+    vfprintf(stderr, fmt, arg);
+#endif
+
+    va_end(arg);
+}
+
+#ifdef _WIN32
+void fmt_s_to_S(wchar_t *fmt) {
+    for (size_t i = 0; i < wcslen(fmt); i++) {
+        if(fmt[i] == L'%' && fmt[i+1] == L's') {
+            fmt[i+1] = L'S';
+        }
+    }
+}
+#endif
