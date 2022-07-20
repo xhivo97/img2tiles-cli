@@ -4,11 +4,18 @@ LDFLAGS=-lpng
 BASENAME=img-slice
 
 ifeq ($(OS), Windows_NT)
-	SHELL=cmd.exe
+	SHELL=powershell.exe
+	.SHELLFLAGS=-NoProfile -Command
+	MKDIR=mkdir -p
+	RM=rm -Force
+	SUPPRESS=-Force | Out-Null
 	NAME=$(BASENAME).exe
 	LDFLAGS+=-municode
 else
 	NAME=$(BASENAME)
+	MKDIR=mkdir -p
+	SUPPRESS=2>/dev/null || true
+	RM=rm -f
 endif
 
 SRCDIR=src
@@ -20,9 +27,10 @@ RELEASEBIN=release/$(NAME)
 DEBUGBIN=debug/$(NAME)
 
 all: $(RELEASEBIN)
-
 debug: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
 debug: $(DEBUGBIN)
+
+remake: clean $(RELEASEBIN)
 
 $(RELEASEBIN): $(RELOBJS)
 	$(CC) $(CFLAGS) $(RELOBJS) $(LDFLAGS) -o $@
@@ -30,33 +38,28 @@ $(RELEASEBIN): $(RELOBJS)
 $(DEBUGBIN): $(DBGOBJS)
 	$(CC) $(CFLAGS) $(DBGOBJS) $(LDFLAGS) -o $@
 
-
+release/obj/%.o: $(SRCDIR)/%.c
 ifeq ($(OS), Windows_NT)
-release/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir release\obj 2> nul || VER>NUL
-	$(CC) $(CFLAGS) -c $< -o $@
-
-debug/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir debug\obj 2> nul || VER>NUL
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	@ mkdir release\obj 2> nul || VER>NUL
-	@ mkdir debug\obj 2> nul || VER>NUL
-	del /f /q release\obj\* release\* && rmdir release\obj release
-	del /f /q debug\obj\* debug\* && rmdir debug\obj debug
-else
-release/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir -p release/obj || true
-	$(CC) $(CFLAGS) -c $< -o $@
-
-debug/obj/%.o: $(SRCDIR)/%.c
-	@ mkdir -p debug/obj || true
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	@ mkdir -p release/obj || true
-	@ mkdir -p debug/obj || true
-	rm -f release/obj/*.o && rmdir release/obj && rm -f release/* && rmdir release
-	rm -f debug/obj/*.o && rmdir debug/obj && rm -f debug/* && rmdir debug
+	@ $$env:PATH = ($$env:PATH -split ';' | ?{ $$_ -notmatch '\\Strawberry\\c\\bin$$' }) -join ';'
 endif
+	@ $(MKDIR) release/obj $(SUPPRESS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+debug/obj/%.o: $(SRCDIR)/%.c
+ifeq ($(OS), Windows_NT)
+	@ $$env:PATH = ($$env:PATH -split ';' | ?{ $$_ -notmatch '\\Strawberry\\c\\bin$$' }) -join ';'
+endif
+	@ $(MKDIR) debug/obj $(SUPPRESS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	@ $(MKDIR) release/obj $(SUPPRESS)
+	@ $(MKDIR) debug/obj $(SUPPRESS)
+	$(RM) release/obj/*.o
+	rmdir release/obj
+	$(RM) release/*
+	rmdir release
+	$(RM) debug/obj/*.o
+	rmdir debug/obj
+	$(RM) debug/*
+	rmdir debug
