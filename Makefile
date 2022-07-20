@@ -1,4 +1,4 @@
-CC=gcc
+COMPILER=clang
 CFLAGS=-O2 -DNDEBUG -Wall -Wextra
 LDFLAGS=-lpng
 BASENAME=img-slice
@@ -6,12 +6,17 @@ BASENAME=img-slice
 ifeq ($(OS), Windows_NT)
 	SHELL=powershell.exe
 	.SHELLFLAGS=-NoProfile -Command
+	CC=$(shell where.exe -q $(COMPILER); if (!$$LASTEXITCODE) \
+		{ where.exe $(COMPILER) | ForEach-Object { if ($$_.Contains('msys')) \
+		{ $$_ } } } else { "ERROR" })
+	ERROR=$(shell "ERROR")
 	MKDIR=mkdir -p
 	RM=rm -Force
 	SUPPRESS=-Force | Out-Null
 	NAME=$(BASENAME).exe
 	LDFLAGS+=-municode
 else
+	CC=gcc
 	NAME=$(BASENAME)
 	MKDIR=mkdir -p
 	SUPPRESS=2>/dev/null || true
@@ -32,6 +37,7 @@ debug: $(DEBUGBIN)
 
 remake: clean $(RELEASEBIN)
 
+
 $(RELEASEBIN): $(RELOBJS)
 	$(CC) $(CFLAGS) $(RELOBJS) $(LDFLAGS) -o $@
 
@@ -39,15 +45,17 @@ $(DEBUGBIN): $(DBGOBJS)
 	$(CC) $(CFLAGS) $(DBGOBJS) $(LDFLAGS) -o $@
 
 release/obj/%.o: $(SRCDIR)/%.c
-ifeq ($(OS), Windows_NT)
-	@ $$env:PATH = ($$env:PATH -split ';' | ?{ $$_ -notmatch '\\Strawberry\\c\\bin$$' }) -join ';'
+ifeq ($(CC), $(ERROR))
+	@ echo "$(COMPILER) not found."
+	@ exit 1
 endif
 	@ $(MKDIR) release/obj $(SUPPRESS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 debug/obj/%.o: $(SRCDIR)/%.c
-ifeq ($(OS), Windows_NT)
-	@ $$env:PATH = ($$env:PATH -split ';' | ?{ $$_ -notmatch '\\Strawberry\\c\\bin$$' }) -join ';'
+ifeq ($(CC), $(ERROR))
+	@ echo "Cannot find compiler."
+	@ exit 1
 endif
 	@ $(MKDIR) debug/obj $(SUPPRESS)
 	$(CC) $(CFLAGS) -c $< -o $@
