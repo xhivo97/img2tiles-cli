@@ -3,8 +3,6 @@
 #include <png.h>
 #include "image.h"
 
-enum extension { IMAGE_NOT_SUPPORTED, IMAGE_PNG, IMAGE_JPEG };
-
 struct image {
     enum extension ext;
 };

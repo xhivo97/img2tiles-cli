@@ -26,10 +26,16 @@ endif
 SRCDIR=src
 SRCS=$(wildcard $(SRCDIR)/*.c)
 RELOBJS=$(patsubst $(SRCDIR)/%.c, release/obj/%.o, $(SRCS))
+RELOBJS:=$(filter-out release/obj/main.o, $(RELOBJS))
 DBGOBJS=$(patsubst $(SRCDIR)/%.c, debug/obj/%.o, $(SRCS))
+DBGOBJS:=$(filter-out debug/obj/main.o, $(DBGOBJS))
 
 RELEASEBIN=release/$(NAME)
 DEBUGBIN=debug/$(NAME)
+
+TEST=test
+TESTS=$(wildcard $(TEST)/*.c)
+TESTBINS=$(patsubst $(TEST)/%.c, $(TEST)/bin/%, $(TESTS))
 
 all: $(RELEASEBIN)
 debug: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
@@ -39,10 +45,10 @@ remake: clean $(RELEASEBIN)
 
 
 $(RELEASEBIN): $(RELOBJS)
-	$(CC) $(CFLAGS) $(RELOBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(RELOBJS) $(SRCDIR)/main.c $(LDFLAGS) -o $@
 
 $(DEBUGBIN): $(DBGOBJS)
-	$(CC) $(CFLAGS) $(DBGOBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(DBGOBJS) $(SRCDIR)/main.c $(LDFLAGS) -o $@
 
 release/obj/%.o: $(SRCDIR)/%.c
 ifeq ($(CC), $(ERROR))
@@ -50,7 +56,7 @@ ifeq ($(CC), $(ERROR))
 	@ exit 1
 endif
 	@ $(MKDIR) release/obj $(SUPPRESS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(SILENT) $(CC) $(CFLAGS) -c $< -o $@
 
 debug/obj/%.o: $(SRCDIR)/%.c
 ifeq ($(CC), $(ERROR))
@@ -58,16 +64,29 @@ ifeq ($(CC), $(ERROR))
 	@ exit 1
 endif
 	@ $(MKDIR) debug/obj $(SUPPRESS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(SILENT) $(CC) $(CFLAGS) -c $< -o $@
+
+$(TEST)/bin/%: $(TEST)/%.c
+	@ $(CC) $(CFLAGS) $< $(DBGOBJS) -o $@
+
+$(TEST)/bin:
+	mkdir $@
+
+SILENT=
+test: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
+test: SILENT=@
+test: clean $(DBGOBJS) $(TEST)/bin $(TESTBINS)
+	@ for test in $(TESTBINS) ; do ./$$test ; done
 
 clean:
 	@ $(MKDIR) release/obj $(SUPPRESS)
 	@ $(MKDIR) debug/obj $(SUPPRESS)
-	$(RM) release/obj/*.o
-	rmdir release/obj
-	$(RM) release/*
-	rmdir release
-	$(RM) debug/obj/*.o
-	rmdir debug/obj
-	$(RM) debug/*
-	rmdir debug
+	$(SILENT) $(RM) release/obj/*.o
+	$(SILENT) rmdir release/obj
+	$(SILENT) $(RM) release/*
+	$(SILENT) rmdir release
+	$(SILENT) $(RM) debug/obj/*.o
+	$(SILENT) rmdir debug/obj
+	$(SILENT) $(RM) debug/*
+	$(SILENT) rmdir debug
+	$(SILENT) $(RM) test/bin/*
