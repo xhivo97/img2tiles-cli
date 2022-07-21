@@ -29,6 +29,10 @@ void test_check_extension() {
     // Invalid extensions
     assert(check_extension("/not/valid.inv") == IMAGE_NOT_SUPPORTED);
 
+    // Invalid no extension
+    assert(check_extension("/not/png") == IMAGE_NOT_SUPPORTED);
+    assert(check_extension("/not/jpg") == IMAGE_NOT_SUPPORTED);
+
     printf("check_extension tests passed\n");
 }
 

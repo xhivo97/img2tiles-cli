@@ -1,11 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <png.h>
 #include "image.h"
-
-struct image {
-    enum extension ext;
-};
 
 #ifdef _WIN32
 static const wchar_t *valid_extensions[] = {L".png", L".PNG", L".jpg", L".JPG", L".jpeg", L".JPEG"};
@@ -14,10 +8,36 @@ static const char *valid_extensions[] = {".png", ".PNG", ".jpg", ".JPG", ".jpeg"
 #endif
 
 #ifdef _WIN32
+int image_struct_init(struct image *img, const wchar_t *in_path, const wchar_t *out_dir) {
+#else
+int image_struct_init(struct image *img, const char *in_path, const char *out_dir) {
+    FILE *fp = FOPEN(in_path, "rb");
+    if (!fp) {
+        print_error("could not open: %s\n", getbase(in_path));
+        return EXIT_FAILURE;
+    }
+
+    img->ext = check_extension(in_path);
+    if (img->ext == IMAGE_NOT_SUPPORTED) {
+        print_error("file %s is not supported\n", getbase(in_path));
+        fclose(fp);
+        return EXIT_FAILURE;
+    }
+
+    if (make_directory(out_dir) != 0) {
+        print_error("could not create directory: %s\n", out_dir);
+        fclose(fp);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+#endif
+
+#ifdef _WIN32
 int generate_tiles(const wchar_t *in_path, const wchar_t *out_dir) {
 #else
 int generate_tiles(const char *in_path, const char *out_dir) {
-    struct image img;
 #endif
     FILE *fp = FOPEN(in_path, "rb");
     if (!fp) {
@@ -25,8 +45,7 @@ int generate_tiles(const char *in_path, const char *out_dir) {
         return EXIT_FAILURE;
     }
 
-    img.ext = check_extension(in_path);
-    if (img.ext == IMAGE_NOT_SUPPORTED) {
+    if (check_extension(in_path) == IMAGE_NOT_SUPPORTED) {
         print_error("file %s is not supported\n", getbase(in_path));
         fclose(fp);
         return EXIT_FAILURE;

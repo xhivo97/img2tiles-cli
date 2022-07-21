@@ -38,5 +38,6 @@ const char *getbase(const char *path);
 #endif
 
 void print_error(char *format, ...);
+void print_log(char *format, ...);
 
 #endif /* PLATFORM_H */

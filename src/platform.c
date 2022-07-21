@@ -57,6 +57,25 @@ void print_error(char *fmt, ...) {
     va_end(arg);
 }
 
+void print_log(char *fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
+
+#ifdef _WIN32
+    wchar_t *w_fmt;
+    int size = snwprintf(NULL, 0, L"%s", fmt);
+    w_fmt = malloc(sizeof(wchar_t)*size+1);
+    snwprintf(w_fmt, size, L"%s", fmt);
+
+    fmt_s_to_S(w_fmt);
+    vfwprintf(stdout, w_fmt, arg);
+#else
+    vfprintf(stdout, fmt, arg);
+#endif
+
+    va_end(arg);
+}
+
 #ifdef _WIN32
 void fmt_s_to_S(wchar_t *fmt) {
     for (size_t i = 0; i < wcslen(fmt); i++) {

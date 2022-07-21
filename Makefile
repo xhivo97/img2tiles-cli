@@ -1,6 +1,6 @@
 COMPILER=clang
 CFLAGS=-O2 -DNDEBUG -Wall -Wextra
-LDFLAGS=-lpng
+LDFLAGS=-lpng -ljpeg
 BASENAME=img-slice
 
 ifeq ($(OS), Windows_NT)
@@ -36,6 +36,7 @@ DEBUGBIN=debug/$(NAME)
 TEST=test
 TESTS=$(wildcard $(TEST)/*.c)
 TESTBINS=$(patsubst $(TEST)/%.c, $(TEST)/bin/%, $(TESTS))
+SILENT=
 
 all: $(RELEASEBIN)
 debug: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
@@ -72,7 +73,6 @@ $(TEST)/bin/%: $(TEST)/%.c
 $(TEST)/bin:
 	mkdir $@
 
-SILENT=
 test: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
 test: SILENT=@
 test: clean $(DBGOBJS) $(TEST)/bin $(TESTBINS)

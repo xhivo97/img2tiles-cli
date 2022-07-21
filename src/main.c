@@ -23,7 +23,8 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    generate_tiles(argv[1], argv[2]);
+    struct image img;
+    image_struct_init(&img, argv[1], argv[2]);
 
     return EXIT_SUCCESS;
 }
