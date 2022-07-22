@@ -24,7 +24,14 @@ int main(int argc, char **argv) {
     }
 
     struct image img;
-    image_struct_init(&img, argv[1], argv[2]);
+    if (image_struct_init(&img, argv[1], argv[2]) == EXIT_FAILURE)
+        return EXIT_FAILURE;
 
+    if (image_init_read(&img) == EXIT_FAILURE) {
+        print_error("could not initialize image reader");
+        return EXIT_FAILURE;
+    }
+
+    image_struct_destroy(&img);
     return EXIT_SUCCESS;
 }

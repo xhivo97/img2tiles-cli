@@ -68,7 +68,7 @@ endif
 	$(SILENT) $(CC) $(CFLAGS) -c $< -o $@
 
 $(TEST)/bin/%: $(TEST)/%.c
-	@ $(CC) $(CFLAGS) $< $(DBGOBJS) -o $@
+	@ $(CC) $(CFLAGS) $< $(DBGOBJS) $(LDFLAGS) -o $@
 
 $(TEST)/bin:
 	mkdir $@
