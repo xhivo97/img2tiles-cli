@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include "image.h"
 
@@ -34,6 +35,7 @@ int image_struct_init(struct image *img, const char *in_path, const char *out_di
 
     if (img->ext == IMAGE_PNG) {
         img->init_read = image_init_read_png;
+        img->read_rows = image_read_rows_png;
     }
 
     return EXIT_SUCCESS;
@@ -55,7 +57,35 @@ int image_struct_destroy(struct image *img) {
 }
 
 int image_init_read(struct image *img) {
-    return img->init_read(img);
+    if (img->init_read(img) == EXIT_FAILURE)
+        return EXIT_FAILURE;
+    
+    image_set_padding(img);
+    return EXIT_SUCCESS;
+}
+
+int image_read_rows_png(int nr_rows, struct image *img) {
+    assert(img->png_ptr != NULL && img->info_ptr != NULL);
+    if (setjmp(png_jmpbuf(img->png_ptr)))
+        return EXIT_FAILURE;
+    png_read_rows(img->png_ptr, img->row_pointers, NULL, nr_rows);
+
+    img->row_count = nr_rows;
+    return EXIT_SUCCESS;
+}
+
+int image_read_rows(int nr_rows, struct image *img) {
+    return img->read_rows(nr_rows, img);
+}
+
+void image_set_padding(struct image *img) {
+    img->pad_size = get_padded_size(img->width, img->height, img->tile_size);
+    img->top_pad = (img->pad_size - img->height) / 2;
+    img->left_pad = (img->pad_size - img->width) / 2;
+    img->levels = get_zoom_levels(img->pad_size, img->tile_size);
+
+    img->ofs_x = img->left_pad * 4;
+    img->ofs_y = img->top_pad;
 }
 
 int image_init_read_png (struct image *img) {
@@ -168,4 +198,59 @@ int check_extension(const char *in_path) {
     }
     
     return IMAGE_NOT_SUPPORTED;
+}
+
+int get_padded_size(int width, int  height, int tile_size) {
+    int ret = height < width ? width : height;
+	if ((tile_size & (tile_size-1)) != 0)
+		return -1;
+	if (ret < tile_size)
+		return tile_size;
+	ret--;
+	ret |= ret >> 1;
+	ret |= ret >> 2;
+	ret |= ret >> 4;
+	ret |= ret >> 8;
+	ret |= ret >> 16;
+	ret++;
+	if ((ret % tile_size) == 0)
+		return ret;
+	ret |= ret >> 1;
+	ret |= ret >> 2;
+	ret |= ret >> 4;
+	ret |= ret >> 8;
+	ret |= ret >> 16;
+	ret++;
+	return ret;
+}
+
+int get_zoom_levels(int size, int tile_size) {
+	int ret = 0;
+	while ((size >> ret) > tile_size) {
+		ret++;
+	}
+	return ret;
+}
+
+void shrink_pow2(png_byte **dest, int n, int width, int height, png_byte **src) {
+    for (int x = 0; x < height; x += n) {
+        for (int y = 0; y < width*4; y += n*4) {
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+            int alpha = 0;
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    red += src[x+i][y+(j*4)+0];
+                    green += src[x+i][y+(j*4)+1];
+                    blue += src[x+i][y+(j*4)+2];
+                    alpha += src[x+i][y+(j*4)+3];
+                }
+            }
+            dest[x/n][y/n] = red / (n*n);
+            dest[x/n][(y/n)+1] = green / (n*n);
+            dest[x/n][(y/n)+2] = blue / (n*n);
+            dest[x/n][(y/n)+3] = alpha / (n*n);
+        }
+    }
 }

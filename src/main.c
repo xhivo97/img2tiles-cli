@@ -32,6 +32,10 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    if (image_read_rows(256, &img)) {
+        print_error("could not read rows");
+        return EXIT_FAILURE;
+    }
     image_struct_destroy(&img);
     return EXIT_SUCCESS;
 }
