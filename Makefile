@@ -1,7 +1,7 @@
-COMPILER=clang
+COMPILER=gcc
 CFLAGS=-O2 -DNDEBUG -Wall -Wextra
 LDFLAGS=-lpng -ljpeg
-BASENAME=img-slice
+NAME=img-slice
 
 ifeq ($(OS), Windows_NT)
 	SHELL=powershell.exe
@@ -13,14 +13,14 @@ ifeq ($(OS), Windows_NT)
 	MKDIR=mkdir -p
 	RM=rm -Force
 	SUPPRESS=-Force | Out-Null
-	NAME=$(BASENAME).exe
 	LDFLAGS+=-municode
+	RUNTESTS=ls test/bin | ForEach-Object { Start-Process -FilePath $$_.FullName -NoNewWindow }
 else
-	CC=gcc
-	NAME=$(BASENAME)
+	CC=$(COMPILER)
 	MKDIR=mkdir -p
 	SUPPRESS=2>/dev/null || true
 	RM=rm -f
+	RUNTESTS=for test in $(TESTBINS) ; do ./$$test ; done
 endif
 
 SRCDIR=src
@@ -68,7 +68,7 @@ endif
 	$(SILENT) $(CC) $(CFLAGS) -c $< -o $@
 
 $(TEST)/bin/%: $(TEST)/%.c
-	@ $(CC) $(CFLAGS) $< $(DBGOBJS) $(LDFLAGS) -o $@
+	$(SILENT) $(CC) $(CFLAGS) $< $(DBGOBJS) $(LDFLAGS) -o $@
 
 $(TEST)/bin:
 	mkdir $@
@@ -76,11 +76,12 @@ $(TEST)/bin:
 test: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
 test: SILENT=@
 test: clean $(DBGOBJS) $(TEST)/bin $(TESTBINS)
-	@ for test in $(TESTBINS) ; do ./$$test ; done
+	@ $(RUNTESTS)
 
 clean:
 	@ $(MKDIR) release/obj $(SUPPRESS)
 	@ $(MKDIR) debug/obj $(SUPPRESS)
+	@ $(MKDIR) test/bin $(SUPPRESS)
 	$(SILENT) $(RM) release/obj/*.o
 	$(SILENT) rmdir release/obj
 	$(SILENT) $(RM) release/*

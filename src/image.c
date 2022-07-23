@@ -12,6 +12,7 @@ static const char *valid_extensions[] = {".png", ".PNG", ".jpg", ".JPG", ".jpeg"
 int image_struct_init(struct image *img, const wchar_t *in_path, const wchar_t *out_dir) {
 #else
 int image_struct_init(struct image *img, const char *in_path, const char *out_dir) {
+#endif
     img->png_ptr = NULL;
     img->info_ptr = NULL;
 
@@ -45,7 +46,6 @@ int image_struct_init(struct image *img, const char *in_path, const char *out_di
 
     return EXIT_SUCCESS;
 }
-#endif
 
 int image_struct_destroy(struct image *img) {
     fclose(img->fp);

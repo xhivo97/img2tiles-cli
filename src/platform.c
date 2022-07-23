@@ -44,8 +44,8 @@ void print_error(char *fmt, ...) {
 
 #ifdef _WIN32
     wchar_t *w_fmt;
-    int size = snwprintf(NULL, 0, L"%s", fmt);
-    w_fmt = malloc(sizeof(wchar_t)*size+1);
+    int size = snwprintf(NULL, 0, L"%s", fmt) + 1;
+    w_fmt = malloc(sizeof(wchar_t)*size);
     snwprintf(w_fmt, size, L"%s", fmt);
 
     fmt_s_to_S(w_fmt);
@@ -63,8 +63,8 @@ void print_log(char *fmt, ...) {
 
 #ifdef _WIN32
     wchar_t *w_fmt;
-    int size = snwprintf(NULL, 0, L"%s", fmt);
-    w_fmt = malloc(sizeof(wchar_t)*size+1);
+    int size = snwprintf(NULL, 0, L"%s", fmt) + 1;
+    w_fmt = malloc(sizeof(wchar_t)*size);
     snwprintf(w_fmt, size, L"%s", fmt);
 
     fmt_s_to_S(w_fmt);
