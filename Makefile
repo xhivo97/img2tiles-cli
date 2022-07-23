@@ -14,7 +14,7 @@ ifeq ($(OS), Windows_NT)
 	RM=rm -Force
 	SUPPRESS=-Force | Out-Null
 	LDFLAGS+=-municode
-	RUNTESTS=ls test/bin | ForEach-Object { Start-Process -FilePath $$_.FullName -NoNewWindow }
+	RUNTESTS=./test/bin/test_image.exe
 else
 	CC=$(COMPILER)
 	MKDIR=mkdir -p
@@ -74,7 +74,7 @@ $(TEST)/bin:
 	mkdir $@
 
 test: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
-test: SILENT=@
+test: SILENT=
 test: clean $(DBGOBJS) $(TEST)/bin $(TESTBINS)
 	@ $(RUNTESTS)
 
