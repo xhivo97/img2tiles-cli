@@ -12,6 +12,9 @@ static const char *valid_extensions[] = {".png", ".PNG", ".jpg", ".JPG", ".jpeg"
 int image_struct_init(struct image *img, const wchar_t *in_path, const wchar_t *out_dir) {
 #else
 int image_struct_init(struct image *img, const char *in_path, const char *out_dir) {
+    img->png_ptr = NULL;
+    img->info_ptr = NULL;
+
     img->fp = FOPEN(in_path, "rb");
     if (!img->fp) {
         print_error("could not open: %s\n", getbase(in_path));
@@ -36,6 +39,8 @@ int image_struct_init(struct image *img, const char *in_path, const char *out_di
     if (img->ext == IMAGE_PNG) {
         img->init_read = image_init_read_png;
         img->read_rows = image_read_rows_png;
+    } else if (img->ext == IMAGE_JPEG) {
+        img->init_read = image_init_read_jpeg;
     }
 
     return EXIT_SUCCESS;
@@ -44,13 +49,23 @@ int image_struct_init(struct image *img, const char *in_path, const char *out_di
 
 int image_struct_destroy(struct image *img) {
     fclose(img->fp);
-    if (img->png_ptr != NULL) {
-        if (setjmp(png_jmpbuf(img->png_ptr)))
-            return EXIT_FAILURE;
-        if (img->info_ptr != NULL)
-            png_destroy_read_struct(&img->png_ptr, &img->info_ptr, NULL);
-        else
-            png_destroy_read_struct(&img->png_ptr, NULL, NULL);
+
+    if (img->ext == IMAGE_PNG) {
+        if (img->png_ptr != NULL) {
+            if (setjmp(png_jmpbuf(img->png_ptr)))
+                return EXIT_FAILURE;
+            if (img->info_ptr != NULL)
+                png_destroy_read_struct(&img->png_ptr, &img->info_ptr, NULL);
+            else
+                png_destroy_read_struct(&img->png_ptr, NULL, NULL);
+        }
+        // TO-DO free row_pointers
+        return EXIT_SUCCESS;
+    }
+
+    if (img->ext == IMAGE_JPEG) {
+        jpeg_destroy_decompress(&img->cinfo);
+        free(img->row_buf);
     }
 
     return EXIT_SUCCESS;
@@ -138,6 +153,21 @@ int image_init_read_png (struct image *img) {
             return EXIT_FAILURE;
     }
 
+    DEBUG_PRINT("[PNG] width: %d, height %d\n", img->width, img->height);
+    return EXIT_SUCCESS;
+}
+
+int image_init_read_jpeg (struct image *img) {
+    img->cinfo.err = jpeg_std_error(&img->jerr);
+
+    jpeg_create_decompress(&img->cinfo);
+    jpeg_stdio_src(&img->cinfo, img->fp);
+    jpeg_read_header(&img->cinfo, TRUE);
+
+    jpeg_start_decompress(&img->cinfo);
+    img->row_buf = malloc(sizeof(char) * img->cinfo.output_height * img->cinfo.output_width * 3);
+
+    DEBUG_PRINT("[JPEG] width: %d, height %d\n", img->cinfo.output_width, img->cinfo.output_height);
     return EXIT_SUCCESS;
 }
 

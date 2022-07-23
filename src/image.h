@@ -26,6 +26,10 @@ struct image {
     int color_type;
     int bit_depth;
 
+    struct jpeg_decompress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    unsigned char *row_buf;
+
     // Offset of the input image relative to the padded image, used when reading rows
     int ofs_x;
     int ofs_y;
@@ -54,6 +58,7 @@ int write_file(char *out_path, int width, int height, png_byte **src);
 int image_init_read(struct image *img);
 int image_struct_destroy(struct image *img);
 int image_init_read_png (struct image *img);
+int image_init_read_jpeg (struct image *img);
 int image_read_rows_png(int nr_rows, struct image *img);
 void image_set_padding(struct image *img);
 
