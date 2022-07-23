@@ -13,6 +13,13 @@
 #include <string.h>
 #endif
 
+#ifdef DEBUG
+#define DEBUG_PRINT(...) print_log(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+
 #ifdef _WIN32
 #define CONCAT(x, y) x ## y
 #define STRING(x) CONCAT(L, x)
