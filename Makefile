@@ -14,13 +14,13 @@ ifeq ($(OS), Windows_NT)
 	RM=rm -Force
 	SUPPRESS=-Force | Out-Null
 	LDFLAGS+=-municode
-	RUNTESTS=./test/bin/test_image.exe
+	RUNTESTS=$(patsubst $(TEST)/%.c, $(TEST)/bin/%.exe;, $(TESTS))
 else
 	CC=$(COMPILER)
 	MKDIR=mkdir -p
 	SUPPRESS=2>/dev/null || true
 	RM=rm -f
-	RUNTESTS=for test in $(TESTBINS) ; do ./$$test ; done
+	RUNTESTS=$(patsubst $(TEST)/%.c, $(TEST)/bin/%;, $(TESTS))
 endif
 
 SRCDIR=src
@@ -74,7 +74,7 @@ $(TEST)/bin:
 	mkdir $@
 
 test: CFLAGS=-g -O0 -DDEBUG -Wall -Wextra
-test: SILENT=
+test: SILENT=@
 test: clean $(DBGOBJS) $(TEST)/bin $(TESTBINS)
 	@ $(RUNTESTS)
 
