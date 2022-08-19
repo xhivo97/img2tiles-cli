@@ -5,12 +5,12 @@
 
 #ifdef _WIN32
 #include <direct.h>
-#include <locale.h>
-#include <io.h>
 #include <fcntl.h>
+#include <io.h>
+#include <locale.h>
 #else
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
 #endif
 
 #ifdef DEBUG
@@ -19,20 +19,20 @@
 #define DEBUG_PRINT(...)
 #endif
 
-
 #ifdef _WIN32
-#define CONCAT(x, y) x ## y
-#define STRING(x) CONCAT(L, x)
-#define FPRINTF(stream, format, ...) fwprintf(stream, STRING(format), __VA_ARGS__)
+#define CONCAT(x, y) x##y
+#define STRING(x)    CONCAT(L, x)
+#define FPRINTF(stream, format, ...) \
+	fwprintf(stream, STRING(format), __VA_ARGS__)
 #define FOPEN(filename, mode) _wfopen(filename, STRING(mode))
-#define STRLEN(s) (wcslen(s))
-#define STRCMP(s1, s2) wcscmp(s1, s2)
+#define STRLEN(s)	      (wcslen(s))
+#define STRCMP(s1, s2)	      wcscmp(s1, s2)
 #else
-#define STRING(s) s
+#define STRING(s)		     s
 #define FPRINTF(stream, format, ...) fprintf(stream, format, __VA_ARGS__)
-#define FOPEN(filename, mode) fopen(filename, mode)
-#define STRLEN(s) strlen(s)
-#define STRCMP(s1, s2) strcmp(s1, s2)
+#define FOPEN(filename, mode)	     fopen(filename, mode)
+#define STRLEN(s)		     strlen(s)
+#define STRCMP(s1, s2)		     strcmp(s1, s2)
 #endif
 
 #ifdef _WIN32
