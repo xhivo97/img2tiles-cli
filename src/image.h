@@ -1,6 +1,8 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#include <stdio.h>
+
 #include <jpeglib.h>
 #include <png.h>
 

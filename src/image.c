@@ -1,6 +1,7 @@
-#include "image.h"
 #include <assert.h>
 #include <stdlib.h>
+
+#include "image.h"
 
 #ifdef _WIN32
 static const wchar_t *valid_extensions[] = { L".png", L".PNG", L".jpg", L".JPG",

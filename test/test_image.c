@@ -1,6 +1,7 @@
+#include <assert.h>
+
 #include "../src/image.h"
 #include "../src/platform.h"
-#include <assert.h>
 
 void test_check_extension()
 {
